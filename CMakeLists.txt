@@ -5,7 +5,7 @@ project(solvaris
   VERSION 1.0
   DESCRIPTION "FIB module"
   LANGUAGES C Fortran
-  )
+)
 
 # Safety net
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
@@ -14,6 +14,8 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
       "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there.\n"
   )
 endif()
+
+message(STATUS "Python extension suffix: ${PYTHON_EXTENSION_MODULE_SUFFIX}")
 
 # Ensure scikit-build modules
 if (NOT SKBUILD)
@@ -51,14 +53,14 @@ execute_process(
 )
 
 # Prepping the module
-set(f2py_module_name "solvaris")
+set(f2py_module_name "_solvaris")
 
 file(GLOB fortran_src_file
      CONFIGURE_DEPENDS 
      "${CMAKE_SOURCE_DIR}/src/*.f90"
 )
-# set(fortran_src_file "${CMAKE_SOURCE_DIR}/src/quadratic.f90")
 set(f2py_module_c "${f2py_module_name}module.c")
+set(generated_module_file ${f2py_module_name}${PYTHON_EXTENSION_MODULE_SUFFIX})
 
 # Target for enforcing dependencies
 add_custom_target(genpyf
@@ -69,35 +71,39 @@ add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_c}"
   COMMAND ${PYTHON_EXECUTABLE}  -m "numpy.f2py"
                    ${fortran_src_file}
-                   -m "solvaris"
+                   -m ${f2py_module_name}
                    --lower # Important
   DEPENDS ${fortran_src_file} # Fortran source
 )
 
-add_library(${CMAKE_PROJECT_NAME} MODULE
-            "${f2py_module_name}module.c"
+add_library(${generated_module_file} MODULE
+            "${f2py_module_c}"
             "${F2PY_INCLUDE_DIR}/fortranobject.c"
             ${fortran_src_file})
 
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
+target_include_directories(${generated_module_file} PUBLIC
                            ${F2PY_INCLUDE_DIR}
                            ${NumPy_INCLUDE_DIRS}
                           )
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Python::Module)
-set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES SUFFIX "${PYTHON_EXTENSION_MODULE_SUFFIX}")
-set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES PREFIX "")
+
+target_link_libraries(${generated_module_file} PRIVATE Python::Module)
+set_target_properties(${generated_module_file} PROPERTIES PREFIX "")
 
 # Linker fixes
 if (UNIX)
   if (APPLE)
-    set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
+    set_target_properties(${generated_module_file} PROPERTIES
     LINK_FLAGS  '-Wl,-dylib,-undefined,dynamic_lookup')
   else()
-    set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
+    set_target_properties(${generated_module_file} PROPERTIES
   LINK_FLAGS  '-Wl,--allow-shlib-undefined')
   endif()
 endif()
 
-add_dependencies(${CMAKE_PROJECT_NAME} genpyf)
+add_dependencies(${generated_module_file} genpyf)
 
-install(TARGETS ${CMAKE_PROJECT_NAME} DESTINATION solvaris)
+if (SKBUILD)
+  install(TARGETS ${generated_module_file} DESTINATION solvaris)
+else()
+  install(TARGETS ${generated_module_file} DESTINATION ${CMAKE_SOURCE_DIR}/solvaris)
+endif()
