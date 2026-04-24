@@ -31,7 +31,8 @@ if (NOT SKBUILD)
 endif()
 
 # scikit-build style includes
-find_package(PythonExtensions REQUIRED) # for ${PYTHON_EXTENSION_MODULE_SUFFIX}
+find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+
 
 # Grab the variables from a local Python installation
 # NumPy headers
@@ -81,7 +82,8 @@ add_library(${CMAKE_PROJECT_NAME} MODULE
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC
                            ${F2PY_INCLUDE_DIR}
                            ${NumPy_INCLUDE_DIRS}
-                           ${PYTHON_INCLUDE_DIRS})
+                          )
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Python::Module)
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES SUFFIX "${PYTHON_EXTENSION_MODULE_SUFFIX}")
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES PREFIX "")
 
