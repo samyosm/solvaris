@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this tool, please cite it as below."
+abstract: "Various math & physics tool"
+authors:
+- family-names: "Rahmani"
+  given-names: "Samy"
+  orcid: "https://orcid.org/0009-0005-9083-4934"
+title: "Solvaris"
+version: 0.0.0
+url: "https://github.com/samyosm/solvaris"
+license: "MIT"
+repository-code: "https://github.com/samyosm/solvaris"
+keywords:
+- physics
+- mathematics
+- numerical methods
+type: "software"
