@@ -15,24 +15,6 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   )
 endif()
 
-message(STATUS "Python extension suffix: ${PYTHON_EXTENSION_MODULE_SUFFIX}")
-
-# Ensure scikit-build modules
-if (NOT SKBUILD)
-  find_package(PythonInterp 3.8 REQUIRED)
-  # Kanged --> https://github.com/Kitware/torch_liberator/blob/master/CMakeLists.txt
-  # If skbuild is not the driver; include its utilities in CMAKE_MODULE_PATH
-  execute_process(
-    COMMAND "${PYTHON_EXECUTABLE}"
-    -c "import os, skbuild; print(os.path.dirname(skbuild.__file__))"
-    OUTPUT_VARIABLE SKBLD_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  list(APPEND CMAKE_MODULE_PATH "${SKBLD_DIR}/resources/cmake")
-  message(STATUS "Looking in ${SKBLD_DIR}/resources/cmake for CMake modules")
-endif()
-
-# scikit-build style includes
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
 
@@ -102,8 +84,4 @@ endif()
 
 add_dependencies(${generated_module_file} genpyf)
 
-if (SKBUILD)
-  install(TARGETS ${generated_module_file} DESTINATION solvaris)
-else()
-  install(TARGETS ${generated_module_file} DESTINATION ${CMAKE_SOURCE_DIR}/solvaris)
-endif()
+install(TARGETS ${generated_module_file} DESTINATION solvaris)
